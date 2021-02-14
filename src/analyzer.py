@@ -1,22 +1,27 @@
 import sys, json
-from torchvision import datasets, models, transforms
+import torch
+from torchvision import datasets, models, transforms, utils
 from PIL import Image
 
-def infer(frame):
-    """Need a comment"""
 
-    with open("imagenet-simple-labels.json") as f:
+def imagenet(frame):
+    """Detects the objects in an image frame using pre-trained Imagenet v2.
+
+    :param array frame: an image frame
+    :return array res: an array with the results of the detection:
+    """
+
+    with open("imagenet-classes-simple.json") as f:
         labels = json.load(f)
 
-    # TODO: Need to get the right transfor sizes for each model I'm going to use
-    data_transform = transforms.Compose([transforms.Resize((300, 300)), transforms.ToTensor()])
-
+    # TODO: Need to get the right transform sizes for each model I'm going to use
     # Should we normalize?
     # https://pytorch.org/docs/stable/torchvision/models.html#video-classification
+    data_transform = transforms.Compose([transforms.Resize((300, 300)), transforms.ToTensor()])
 
-    # Load the image
-    #image = Image.open(frame)
-    image = Image.fromarray(frame)
+    # Load the image as an array, otherwise tf is going to freak that it's not a np array
+    image = Image.open(frame)
+    #image = Image.fromarray(frame)
     # Apply the transformation, expand the batch dimension, and send the image to the GPU
     image = data_transform(image).unsqueeze(0).cuda()
 
@@ -28,15 +33,21 @@ def infer(frame):
     mobilenet.eval()
 
     # Get the 1000-dimensional model output
+    #with torch.no_grad():
+    #    detections = mobilenet(image)
+        #detections = utils.non_max_supression(detections, 80, conf_thres, nms_thres)
+    #return detections[0]
+
     out = mobilenet(image)
     # Find the predicted class
     res = "Predicted class is: {}".format(labels[out.argmax()])
     return res
 
     # TODO: Draw a bounding box over the image with the predicted result.
-    # TODO : Return the results in this function
+    test = utils.d
+
 
 if __name__ == "__main__":
-    test_image = '../test/alaskan-malamute.jpg'
-    test = infer(test_image)
+    test_image = '../test/tiger-and-dolphin.jpg'
+    test = imagenet(test_image)
     print(test)
